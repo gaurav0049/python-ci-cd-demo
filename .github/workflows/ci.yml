@@ -1,4 +1,4 @@
-name: Parameterized Test Run with Allure Report
+name: Parameterized Test Run with Allure HTML Report
 
 on:
   workflow_dispatch:
@@ -19,17 +19,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: pip install -r requirements.txt
 
-    - name: Run selected tests & generate Allure results
+    - name: Run tests & generate Allure results
       run: |
         echo "Selected test type: ${{ github.event.inputs.test_type }}"
         if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
@@ -40,8 +40,21 @@ jobs:
           pytest --alluredir=allure-results
         fi
 
-    - name: Upload Allure results
+    - name: Install Allure CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y default-jre
+        curl -o allure.tgz -L https://github.com/allure-framework/allure2/releases/latest/download/allure-2.27.0.tgz
+        tar -xzf allure.tgz
+        sudo mv allure-2.27.0 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+
+    - name: Generate Allure HTML report
+      run: |
+        allure generate allure-results -o allure-report --clean
+
+    - name: Upload Allure HTML report
       uses: actions/upload-artifact@v4
       with:
-        name: allure-results
-        path: allure-results
+        name: allure-html-report
+        path: allure-report
