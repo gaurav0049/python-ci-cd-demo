@@ -8,6 +8,28 @@ on:
         required: true
         default: smoke
 
+      environment:
+        description: "Select environment"
+        required: true
+        default: qa
+        type: choice
+        options:
+          - qa
+          - staging
+          - prod
+
+      browsers:
+        description: "Select browser"
+        required: true
+        default: chrome
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+
+
+
 jobs:
   test:
     runs-on: ubuntu-latest
