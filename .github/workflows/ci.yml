@@ -1,10 +1,17 @@
-name: Python CI Pipeline
+name: Parameterized Test Run
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Choose which tests to run"
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - regression
+          - all
 
 jobs:
   test:
@@ -22,5 +29,13 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Run tests
-      run: pytest
+    - name: Run selected tests
+      run: |
+        echo "Selected test type: ${{ github.event.inputs.test_type }}"
+        if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
+          pytest -m smoke
+        elif [ "${{ github.event.inputs.test_type }}" = "regression" ]; then
+          pytest -m regression
+        else
+          pytest
+        fi
