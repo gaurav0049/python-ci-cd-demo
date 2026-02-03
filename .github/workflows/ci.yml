@@ -1,4 +1,4 @@
-name: Parameterized Test Run added by gaurav
+name: Parameterized Test Run with Allure Report
 
 on:
   workflow_dispatch:
@@ -29,13 +29,19 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Run selected tests
+    - name: Run selected tests & generate Allure results
       run: |
         echo "Selected test type: ${{ github.event.inputs.test_type }}"
         if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
-          pytest -m smoke
+          pytest -m smoke --alluredir=allure-results
         elif [ "${{ github.event.inputs.test_type }}" = "regression" ]; then
-          pytest -m regression
+          pytest -m regression --alluredir=allure-results
         else
-          pytest
+          pytest --alluredir=allure-results
         fi
+
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-results
+        path: allure-results
