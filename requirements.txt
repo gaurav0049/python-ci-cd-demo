@@ -1,2 +1,2 @@
 pytest
-allure-pytest
+pytest-html

@@ -1,4 +1,4 @@
-name: Parameterized Test Run with Allure HTML Report
+name: Parameterized Test Run with PyTest HTML Report
 
 on:
   workflow_dispatch:
@@ -26,35 +26,22 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install Python dependencies
+    - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Run tests & generate Allure results
+    - name: Run selected tests & generate HTML report
       run: |
         echo "Selected test type: ${{ github.event.inputs.test_type }}"
         if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
-          pytest -m smoke --alluredir=allure-results
+          pytest -m smoke --html=pytest-report.html --self-contained-html
         elif [ "${{ github.event.inputs.test_type }}" = "regression" ]; then
-          pytest -m regression --alluredir=allure-results
+          pytest -m regression --html=pytest-report.html --self-contained-html
         else
-          pytest --alluredir=allure-results
+          pytest --html=pytest-report.html --self-contained-html
         fi
 
-    - name: Install Allure CLI
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y default-jre
-        curl -o allure.tgz -L https://github.com/allure-framework/allure2/releases/latest/download/allure-2.27.0.tgz
-        tar -xzf allure.tgz
-        sudo mv allure-2.27.0 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
-
-    - name: Generate Allure HTML report
-      run: |
-        allure generate allure-results -o allure-report --clean
-
-    - name: Upload Allure HTML report
+    - name: Upload PyTest HTML Report
       uses: actions/upload-artifact@v4
       with:
-        name: allure-html-report
-        path: allure-report
+        name: pytest-html-report
+        path: pytest-report.html
