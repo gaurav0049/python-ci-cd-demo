@@ -4,14 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       test_type:
-        description: "Choose which tests to run"
+        description: "Enters pytest markers"
         required: true
         default: smoke
-        type: choice
-        options:
-          - smoke
-          - regression
-          - all
 
 jobs:
   test:
