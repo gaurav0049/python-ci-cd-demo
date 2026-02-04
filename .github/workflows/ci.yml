@@ -1,10 +1,15 @@
-name: Parameterized Test Run with PyTest HTML Report
+name: Parameterized PyTest Run (Folder + Marker)
 
 on:
   workflow_dispatch:
     inputs:
-      test_type:
-        description: "Enters pytest markers"
+      test_folder:
+        description: "Enter test folder path (e.g. tests/smoke, tests/api)"
+        required: true
+        default: tests/smoke
+
+      test_marker:
+        description: "Enter pytest marker (smoke, regression, sanity)"
         required: true
         default: smoke
 
@@ -28,37 +33,47 @@ on:
           - firefox
           - edge
 
-
-
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run selected tests & generate HTML report
-      run: |
-        echo "Selected test type: ${{ github.event.inputs.test_type }}"
-        if [ "${{ github.event.inputs.test_type }}" = "smoke" ]; then
-          pytest -m smoke --html=pytest-report.html --self-contained-html
-        elif [ "${{ github.event.inputs.test_type }}" = "regression" ]; then
-          pytest -m regression --html=pytest-report.html --self-contained-html
-        else
-          pytest --html=pytest-report.html --self-contained-html
-        fi
+      - name: Validate test folder exists
+        run: |
+          if [ ! -d "${{ github.event.inputs.test_folder }}" ]; then
+            echo "❌ Folder not found: ${{ github.event.inputs.test_folder }}"
+            exit 1
+          fi
 
-    - name: Upload PyTest HTML Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: pytest-html-report
-        path: pytest-report.html
+      - name: Run selected folder & marker and generate HTML report
+        run: |
+          echo "📂 Folder: ${{ github.event.inputs.test_folder }}"
+          echo "🏷 Marker: ${{ github.event.inputs.test_marker }}"
+          echo "🌍 Environment: ${{ github.event.inputs.environment }}"
+          echo "🌐 Browser: ${{ github.event.inputs.browsers }}"
+
+          pytest ${{ github.event.inputs.test_folder }} \
+            -m "${{ github.event.inputs.test_marker }}" \
+            --env=${{ github.event.inputs.environment }} \
+            --browser=${{ github.event.inputs.browsers }} \
+            --html=pytest-report.html \
+            --self-contained-html
+
+      - name: Upload PyTest HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-html-report
+          path: pytest-report.html
