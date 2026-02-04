@@ -6,12 +6,10 @@ on:
       test_folder:
         description: "Enter test folder path (e.g. tests/smoke, tests/api)"
         required: true
-        default: tests/smoke
 
       test_marker:
         description: "Enter pytest marker (smoke, regression, sanity)"
         required: false
-        default: smoke
 
       environment:
         description: "Select environment"
