@@ -10,7 +10,7 @@ on:
 
       test_marker:
         description: "Enter pytest marker (smoke, regression, sanity)"
-        required: true
+        required: false
         default: smoke
 
       environment:
