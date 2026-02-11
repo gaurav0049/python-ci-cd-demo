@@ -12,16 +12,6 @@ on:
         description: "Enter pytest marker (smoke, regression, sanity)"
         required: false
 
-      environment:
-        description: "Select environment"
-        required: true
-        default: qa
-        type: choice
-        options:
-          - qa
-          - staging
-          - prod
-
       browsers:
         description: "Enter browsers (comma separated: chromium,firefox,webkit)"
         required: true
@@ -92,7 +82,6 @@ jobs:
         run: |
           echo "📂 Folder: ${{ github.event.inputs.test_folder }}"
           echo "🏷 Marker: ${{ github.event.inputs.test_marker }}"
-          echo "🌍 Environment: ${{ github.event.inputs.environment }}"
           echo "🌐 Browser: ${{ matrix.browser }}"
           echo "⚡ Parallel: ${{ github.event.inputs.parallel }}"
 
