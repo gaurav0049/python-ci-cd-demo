@@ -17,17 +17,22 @@ def playwright_instance():
 def pytest_addoption(parser):
     parser.addoption("--ui-browser", action="store", default=None)
 
-@pytest.fixture(scope="session")
+
+def pytest_generate_tests(metafunc):
+    if "browser" in metafunc.fixturenames:
+
+        cli_browser = metafunc.config.getoption("--ui-browser")
+
+        if cli_browser:
+            browser_list = [b.strip() for b in cli_browser.split(",")]
+        else:
+            browser_list = config.get("tool", "pytest", "ini_options", "browsers")
+
+        metafunc.parametrize("browser", browser_list, indirect=True)
+
+@pytest.fixture(scope="function")
 def browser(playwright_instance, request):
-
-    cli_browser = request.config.getoption("--ui-browser")
-
-    # If CLI browser provided → use it
-    if cli_browser:
-        browser_name = cli_browser
-    else:
-        # Otherwise fallback to TOML config
-        browser_name = config.get("tool", "pytest", "ini_options", "browsers")
+    browser_name = request.param  # ✅ FIXED
 
     headless = config.get("tool", "pytest", "ini_options", "headless")
 
