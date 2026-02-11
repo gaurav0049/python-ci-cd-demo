@@ -17,7 +17,7 @@ def playwright_instance():
 def pytest_addoption(parser):
     parser.addoption("--ui-browser", action="store", default=None)
 
-pytest.fixture(scope="session")
+@pytest.fixture(scope="session")
 def browser(playwright_instance, request):
 
     cli_browser = request.config.getoption("--ui-browser")
