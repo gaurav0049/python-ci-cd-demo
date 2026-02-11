@@ -34,7 +34,12 @@ def pytest_generate_tests(metafunc):
 def browser(playwright_instance, request):
     browser_name = request.param  # ✅ FIXED
 
-    headless = config.get("tool", "pytest", "ini_options", "headless")
+    is_ci = os.getenv("CI", "false").lower() == "true"
+
+    if is_ci:
+        headless = True
+    else:
+        headless = config.get("tool", "pytest", "ini_options", "headless")
 
     browser = getattr(playwright_instance, browser_name).launch(headless=headless)
     yield browser
