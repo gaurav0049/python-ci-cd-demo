@@ -71,7 +71,8 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2 libffi-dev libx264-dev
+          sudo apt-get install -y libasound2 libasound2t64 libffi-dev libx264-dev || \
+          sudo apt-get install -y libasound2t64 libffi-dev libx264-dev
 
       - name: Install Dependencies
         run: |
