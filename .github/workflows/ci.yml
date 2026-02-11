@@ -37,13 +37,27 @@ on:
           - "false"
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      browser_matrix: ${{ steps.set-matrix.outputs.browser_matrix }}
+
+    steps:
+      - name: Convert browsers to JSON matrix
+        id: set-matrix
+        run: |
+          BROWSERS="${{ github.event.inputs.browsers }}"
+          JSON=$(echo $BROWSERS | awk -F',' '{printf "[\"%s\"", $1; for(i=2;i<=NF;i++) printf ",\"%s\"", $i; printf "]"}')
+          echo "browser_matrix=$JSON" >> $GITHUB_OUTPUT
+
   test:
+    needs: prepare
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        browser: ${{ fromJson(format('["{0}"]', join('","', split(github.event.inputs.browsers, ',')))) }}
+        browser: ${{ fromJson(needs.prepare.outputs.browser_matrix) }}
 
     steps:
       - name: Checkout Repository
