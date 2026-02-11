@@ -37,19 +37,26 @@ on:
           - "false"
 
 jobs:
+
+  # -----------------------------------------
+  # Convert browser input to matrix JSON
+  # -----------------------------------------
   prepare:
     runs-on: ubuntu-latest
     outputs:
       browser_matrix: ${{ steps.set-matrix.outputs.browser_matrix }}
 
     steps:
-      - name: Convert browsers to JSON matrix
+      - name: Convert browsers to JSON array
         id: set-matrix
         run: |
           BROWSERS="${{ github.event.inputs.browsers }}"
           JSON=$(echo $BROWSERS | awk -F',' '{printf "[\"%s\"", $1; for(i=2;i<=NF;i++) printf ",\"%s\"", $i; printf "]"}')
           echo "browser_matrix=$JSON" >> $GITHUB_OUTPUT
 
+  # -----------------------------------------
+  # Run tests per browser (parallel matrix)
+  # -----------------------------------------
   test:
     needs: prepare
     runs-on: ubuntu-latest
@@ -68,17 +75,11 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libasound2 libasound2t64 libffi-dev libx264-dev || \
-          sudo apt-get install -y libasound2t64 libffi-dev libx264-dev
-
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          python -m playwright install --with-deps
+          python -m playwright install
 
       - name: Validate Test Folder
         run: |
