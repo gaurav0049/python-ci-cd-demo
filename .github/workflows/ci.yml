@@ -105,7 +105,6 @@ jobs:
           pytest ${{ github.event.inputs.test_folder }} \
             $PARALLEL_OPTION \
             -m "${{ github.event.inputs.test_marker }}" \
-            --env=${{ github.event.inputs.environment }} \
             --ui-browser=${{ matrix.browser }} \
             --html=pytest-report-${{ matrix.browser }}.html \
             --self-contained-html
