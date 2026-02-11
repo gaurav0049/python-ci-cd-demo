@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+addopts = "-v -s -n auto"
+testpaths = ["tests"]
+
+# Custom browser configuration
+browsers = ["chromium", "firefox", "webkit"]
+headless = false
+
+[app_ui]
+base_url="https:\\tek-2nbw2d3:4200\\login"

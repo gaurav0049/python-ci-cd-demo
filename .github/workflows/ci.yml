@@ -1,11 +1,12 @@
-name: Parameterized PyTest Run (Folder + Marker)
+name: UI Automation Tests
 
 on:
   workflow_dispatch:
     inputs:
       test_folder:
-        description: "Enter test folder path (e.g. tests/smoke, tests/api)"
+        description: "Enter test folder (e.g. tests/smoke)"
         required: true
+        default: tests
 
       test_marker:
         description: "Enter pytest marker (smoke, regression, sanity)"
@@ -22,21 +23,30 @@ on:
           - prod
 
       browsers:
-        description: "Select browser"
+        description: "Enter browsers (comma separated: chromium,firefox,webkit)"
         required: true
-        default: chrome
+        default: chromium
+
+      parallel:
+        description: "Run tests in parallel?"
+        required: true
+        default: "true"
         type: choice
         options:
-          - chrome
-          - firefox
-          - edge
+          - "true"
+          - "false"
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJson(format('["{0}"]', join('","', split(github.event.inputs.browsers, ',')))) }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -44,34 +54,43 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          python -m playwright install --with-deps
 
-      - name: Validate test folder exists
+      - name: Validate Test Folder
         run: |
           if [ ! -d "${{ github.event.inputs.test_folder }}" ]; then
-            echo "❌ Folder not found: ${{ github.event.inputs.test_folder }}"
+            echo "❌ Folder not found!"
             exit 1
           fi
 
-      - name: Run selected folder & marker and generate HTML report
+      - name: Run Tests
         run: |
           echo "📂 Folder: ${{ github.event.inputs.test_folder }}"
           echo "🏷 Marker: ${{ github.event.inputs.test_marker }}"
           echo "🌍 Environment: ${{ github.event.inputs.environment }}"
-          echo "🌐 Browser: ${{ github.event.inputs.browsers }}"
+          echo "🌐 Browser: ${{ matrix.browser }}"
+          echo "⚡ Parallel: ${{ github.event.inputs.parallel }}"
+
+          if [ "${{ github.event.inputs.parallel }}" = "true" ]; then
+            PARALLEL_OPTION="-n auto"
+          else
+            PARALLEL_OPTION=""
+          fi
 
           pytest ${{ github.event.inputs.test_folder }} \
+            $PARALLEL_OPTION \
             -m "${{ github.event.inputs.test_marker }}" \
             --env=${{ github.event.inputs.environment }} \
-            --browser=${{ github.event.inputs.browsers }} \
-            --html=pytest-report.html \
+            --ui-browser=${{ matrix.browser }} \
+            --html=pytest-report-${{ matrix.browser }}.html \
             --self-contained-html
 
-      - name: Upload PyTest HTML Report
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-html-report
-          path: pytest-report.html
+          name: pytest-report-${{ matrix.browser }}
+          path: pytest-report-${{ matrix.browser }}.html
